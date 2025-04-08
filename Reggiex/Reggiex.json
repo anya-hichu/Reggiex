@@ -1,0 +1,12 @@
+{
+  "Author": "Anya Hichu",
+  "Name": "Reggiex",
+  "Punchline": "Because my body is reggie(x)",
+  "Description": "Configurable text patterns to execute commands",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "text",
+    "command",
+    "execute"
+  ]
+}
