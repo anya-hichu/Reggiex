@@ -12,4 +12,8 @@ Installable using my custom repository (instructions here: https://github.com/an
 
 ## Screenshots
 
-![config](images/image1.png)
+### Chat
+![chat](images/image1.png)
+
+### Emote
+![emote](images/image2.png)

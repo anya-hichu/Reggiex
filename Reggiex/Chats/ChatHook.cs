@@ -14,7 +14,8 @@ using System.Text.RegularExpressions;
 namespace Reggiex.Chat;
 
 // Source: https://github.com/Project-GagSpeak/client/blob/main/ProjectGagSpeak/UpdateMonitoring/Chat/ChatInputProcessor.cs
-public unsafe class ChatInputDetour : IDisposable
+
+public unsafe class ChatHook : IDisposable
 {
     private Config Config { get; init; }
     private IPluginLog PluginLog { get; init; }
@@ -23,7 +24,7 @@ public unsafe class ChatInputDetour : IDisposable
     [Signature("E8 ?? ?? ?? ?? FE 86 ?? ?? ?? ?? C7 86 ?? ?? ?? ?? ?? ?? ?? ??", DetourName = nameof(ProcessChatInputDetour), Fallibility = Fallibility.Auto)]
     private Hook<ProcessChatInputDelegate> ProcessChatInputHook { get; set; } = null!;
 
-    public ChatInputDetour(Config config, IGameInteropProvider gameInteropProvider, IPluginLog pluginLog)
+    public ChatHook(Config config, IGameInteropProvider gameInteropProvider, IPluginLog pluginLog)
     {
         Config = config;
         PluginLog = pluginLog;
@@ -57,12 +58,12 @@ public unsafe class ChatInputDetour : IDisposable
             PluginLog.Debug(decodedMessage);
             
             var newDecodedMessage = decodedMessage;
-            foreach (var condition in Config.Conditions.Where(c => c.Enabled && !c.Pattern.IsNullOrWhitespace() && !c.Replacement.IsNullOrWhitespace()))
+            foreach (var chatConfig in Config.ChatConfigs.Where(c => c.Enabled && !c.Pattern.IsNullOrWhitespace() && !c.Replacement.IsNullOrWhitespace()))
             {
-                if (Regex.IsMatch(newDecodedMessage, condition.Pattern))
+                if (Regex.IsMatch(newDecodedMessage, chatConfig.Pattern))
                 {
-                    var remplacedMessage = Regex.Replace(newDecodedMessage, condition.Pattern, condition.Replacement);
-                    if (condition.Inline)
+                    var remplacedMessage = Regex.Replace(newDecodedMessage, chatConfig.Pattern, chatConfig.Replacement);
+                    if (chatConfig.Inline)
                     {
                         newDecodedMessage = remplacedMessage;
                     }

@@ -1,9 +1,9 @@
 using System;
 
-namespace Reggiex.Configs;
+namespace Reggiex.Chat;
 
 [Serializable]
-public class ConditionConfig
+public class ChatConfig
 {
     public bool Enabled { get; set; } = false;
     public int Priority { get; set; } = 0;

@@ -5,6 +5,8 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using Reggiex.Configs;
 using Reggiex.Chat;
+using Lumina.Excel.Sheets;
+using Reggiex.Emotes;
 using Dalamud.Game;
 
 namespace Reggiex;
@@ -13,11 +15,13 @@ public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
-    [PluginService] internal static IFramework Framework { get; private set; } = null!;
-    [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
     [PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
     [PluginService] internal static IPluginLog PluginLog { get; private set; } = null!;
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
+    [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
+    [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
+    [PluginService] internal static IClientState ClientState { get; private set; } = null!;
+    [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
 
 
     private const string CommandName = "/reggiex";
@@ -27,15 +31,17 @@ public sealed class Plugin : IDalamudPlugin
 
     public readonly WindowSystem WindowSystem = new("Reggiex");
 
-    private ChatInputDetour ChatInputDetour { get; init; }
+    private ChatHook ChatHook { get; init; }
     private ConfigWindow ConfigWindow { get; init; }
+
+    private EmoteHook EmoteHook { get; init; }
 
     public Plugin()
     {
         Config = PluginInterface.GetPluginConfig() as Config ?? new Config();
-        ConfigWindow = new ConfigWindow(Config);
+        Config.MaybeMigrate();
+        ConfigWindow = new ConfigWindow(Config, DataManager.GetExcelSheet<Emote>()!);
         
-
         WindowSystem.AddWindow(ConfigWindow);
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
@@ -45,14 +51,17 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.Draw += DrawUI;
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
         PluginInterface.UiBuilder.OpenMainUi += ToggleConfigUI;
-        ChatInputDetour = new(Config, GameInteropProvider, PluginLog);
+
+        ChatHook = new(Config, GameInteropProvider, PluginLog);
+        EmoteHook = new(new(SigScanner), ClientState, Config, GameInteropProvider, ObjectTable, PluginLog);
     }
 
     public void Dispose()
     {
         WindowSystem.RemoveAllWindows();
         CommandManager.RemoveHandler(CommandName);
-        ChatInputDetour.Dispose();
+        EmoteHook.Dispose();
+        ChatHook.Dispose();
     }
 
     private void OnCommand(string command, string args)
