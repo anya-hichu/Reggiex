@@ -226,14 +226,14 @@ public class ConfigWindow : Window
                                     {
                                         var instigatorPattern = emoteConfig.InstigatorPattern;
                                         ImGui.SetNextItemWidth(-1);
-                                        if (ImGui.InputText($"###emoteConfig{hash}SourcePattern", ref instigatorPattern, ushort.MaxValue))
+                                        if (ImGui.InputText($"###emoteConfig{hash}instigatorPattern", ref instigatorPattern, ushort.MaxValue))
                                         {
                                             emoteConfig.InstigatorPattern = instigatorPattern;
                                             Config.Save();
                                         }
                                         if (ImGui.IsItemHovered())
                                         {
-                                            ImGui.SetTooltip("C# regex format");
+                                            ImGui.SetTooltip("Examples of patterns (C# regex format):\n - ^Name@World$\n - ^(Name@World|Other Name@World)$\n");
                                         }
                                     }
 

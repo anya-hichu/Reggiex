@@ -2,7 +2,6 @@ using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
-using Reggiex.Chat;
 using Reggiex.Chats;
 using Reggiex.Configs;
 using System;

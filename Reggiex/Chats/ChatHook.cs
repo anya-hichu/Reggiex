@@ -55,8 +55,7 @@ public unsafe class ChatHook : IDisposable
             {
                 return ProcessChatInputHook.Original(uiModule, message, a3);
             }
-            PluginLog.Debug(decodedMessage);
-            
+
             var newDecodedMessage = decodedMessage;
             foreach (var chatConfig in Config.ChatConfigs.Where(c => c.Enabled && !c.Pattern.IsNullOrWhitespace() && !c.Replacement.IsNullOrWhitespace()))
             {
