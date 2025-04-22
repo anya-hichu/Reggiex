@@ -63,10 +63,14 @@ public class EmoteHook
                     {
                         ChatServer.SendMessage(emoteConfig.Command);
                     }
-                    else if (Regex.IsMatch(instigator.Name.ToString(), emoteConfig.InstigatorPattern))
+                    else
                     {
-                        var replacedCommand = Regex.Replace($"{instigator.Name}@{instigator.HomeWorld.Value.Name}", emoteConfig.InstigatorPattern, emoteConfig.Command);
-                        ChatServer.SendMessage(replacedCommand);
+                        var instigatorFullName = $"{instigator.Name}@{instigator.HomeWorld.Value.Name}";
+                        if (Regex.IsMatch(instigatorFullName, emoteConfig.InstigatorPattern))
+                        {
+                            var replacedCommand = Regex.Replace(instigatorFullName, emoteConfig.InstigatorPattern, emoteConfig.Command);
+                            ChatServer.SendMessage(replacedCommand);
+                        }
                     }
                 }
             }

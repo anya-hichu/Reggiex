@@ -233,7 +233,7 @@ public class ConfigWindow : Window
                                         }
                                         if (ImGui.IsItemHovered())
                                         {
-                                            ImGui.SetTooltip("Examples of patterns (C# regex format):\n - ^Name@World$\n - ^(Name@World|Other Name@World)$\n");
+                                            ImGui.SetTooltip("Examples of patterns (C# regex format):\n  ^Name@World$\n  ^(Name@World|Other Name@World)$\n");
                                         }
                                     }
 
