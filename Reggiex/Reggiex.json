@@ -2,7 +2,7 @@
   "Author": "Anya Hichu",
   "Name": "Reggiex",
   "Punchline": "Because my body is reggie(x)",
-  "Description": "Configurable text patterns to execute commands",
+  "Description": "Configurable text patterns or emotes to execute commands",
   "ApplicableVersion": "any",
   "Tags": [
     "text",

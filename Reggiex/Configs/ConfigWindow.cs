@@ -67,7 +67,7 @@ public class ConfigWindow : Window
                         ImGui.SetTooltip("Tip: /echo command can be used to test the different configs without sending messages");
                     }
 
-                    using (var table = ImRaii.Table("chatConfigs", 4, ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY, new(ImGui.GetWindowWidth() - ImGui.GetCursorPosX(), ImGui.GetWindowHeight() - 95)))
+                    using (var table = ImRaii.Table("chatConfigs", 4, ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY, new(ImGui.GetWindowWidth() - ImGui.GetCursorPosX(), ImGui.GetWindowHeight() - 100)))
                     {
                         if (table)
                         {
@@ -192,7 +192,7 @@ public class ConfigWindow : Window
                         Config.Save();
                     }
 
-                    using (var table = ImRaii.Table("emoteConfigs", 5, ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY, new(ImGui.GetWindowWidth() - ImGui.GetCursorPosX(), ImGui.GetWindowHeight() - 95)))
+                    using (var table = ImRaii.Table("emoteConfigs", 5, ImGuiTableFlags.RowBg | ImGuiTableFlags.Resizable | ImGuiTableFlags.ScrollY, new(ImGui.GetWindowWidth() - ImGui.GetCursorPosX(), ImGui.GetWindowHeight() - 100)))
                     {
                         if (table)
                         {
@@ -242,7 +242,7 @@ public class ConfigWindow : Window
                                             }
                                             if (ImGui.IsItemHovered())
                                             {
-                                                ImGui.SetTooltip(errorMessage ?? "Examples of patterns (C# regex format):\n  ^Name@World$\n  ^(Name@World|Other Name@World)$\n");
+                                                ImGui.SetTooltip(errorMessage ?? "Leave empty to match anyone doing the emote(s) to you\n\nExamples of patterns (C# regex format):\n  ^Name@World$\n  ^(Name@World|Other Name@World)$\n");
                                             }
                                         }
                                     }
