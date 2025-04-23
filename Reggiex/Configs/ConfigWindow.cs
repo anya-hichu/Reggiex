@@ -8,6 +8,9 @@ using Reggiex.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Dalamud.Interface.Colors;
+using Dalamud.Utility;
+using System.Text.RegularExpressions;
 
 namespace Reggiex.Configs;
 
@@ -118,15 +121,19 @@ public class ConfigWindow : Window
                                     {
                                         var pattern = chatConfig.Pattern;
                                         ImGui.SetNextItemWidth(-1);
-                                        if (ImGui.InputText($"###chatConfig{hash}Pattern", ref pattern, ushort.MaxValue))
+                                        using (ImRaii.PushColor(ImGuiCol.Text, TryValidatePattern(pattern, out var errorMessage) ? ImGuiColors.DalamudWhite : ImGuiColors.DalamudRed))
                                         {
-                                            chatConfig.Pattern = pattern;
-                                            Config.Save();
-                                        }
-                                        if (ImGui.IsItemHovered())
-                                        {
-                                            ImGui.SetTooltip("C# regex format");
-                                        }
+                                            if (ImGui.InputText($"###chatConfig{hash}Pattern", ref pattern, ushort.MaxValue))
+                                            {
+                                                chatConfig.Pattern = pattern;
+                                                Config.Save();
+                                            }
+                                            if (ImGui.IsItemHovered())
+                                            {
+                                                ImGui.SetTooltip(errorMessage ?? "Examples of patterns (C# regex format):\n  :heart:\n  ^.*:blush:.*$");
+                                            }
+                                        }   
+                                        
                                     }
 
                                     if (ImGui.TableNextColumn())
@@ -226,14 +233,17 @@ public class ConfigWindow : Window
                                     {
                                         var instigatorPattern = emoteConfig.InstigatorPattern;
                                         ImGui.SetNextItemWidth(-1);
-                                        if (ImGui.InputText($"###emoteConfig{hash}instigatorPattern", ref instigatorPattern, ushort.MaxValue))
+                                        using (ImRaii.PushColor(ImGuiCol.Text, TryValidatePattern(instigatorPattern, out var errorMessage) ? ImGuiColors.DalamudWhite : ImGuiColors.DalamudRed))
                                         {
-                                            emoteConfig.InstigatorPattern = instigatorPattern;
-                                            Config.Save();
-                                        }
-                                        if (ImGui.IsItemHovered())
-                                        {
-                                            ImGui.SetTooltip("Examples of patterns (C# regex format):\n  ^Name@World$\n  ^(Name@World|Other Name@World)$\n");
+                                            if (ImGui.InputText($"###emoteConfig{hash}instigatorPattern", ref instigatorPattern, ushort.MaxValue))
+                                            {
+                                                emoteConfig.InstigatorPattern = instigatorPattern;
+                                                Config.Save();
+                                            }
+                                            if (ImGui.IsItemHovered())
+                                            {
+                                                ImGui.SetTooltip(errorMessage ?? "Examples of patterns (C# regex format):\n  ^Name@World$\n  ^(Name@World|Other Name@World)$\n");
+                                            }
                                         }
                                     }
 
@@ -288,7 +298,27 @@ public class ConfigWindow : Window
                     }
                 }
             }
+        }        
+    }
+
+    private static bool TryValidatePattern(string pattern, out string? errorMessage)
+    {
+        if (pattern.IsNullOrWhitespace())
+        {
+            errorMessage = default;
+            return true;
         }
-        
+
+        try
+        {
+            Regex.IsMatch(string.Empty, pattern);
+            errorMessage = default;
+            return true;
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+            return false;
+        }
     }
 }
