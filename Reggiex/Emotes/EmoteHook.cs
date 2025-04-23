@@ -52,30 +52,36 @@ public class EmoteHook
 
     private void OnEmoteDetour(ulong unk, ulong instigatorAddr, ushort emoteId, ulong targetId, ulong unk2)
     {
-        if (Config.Enabled)
-        {
-            var localPlayer = ClientState.LocalPlayer;
-            if (localPlayer != null && targetId == localPlayer.GameObjectId && ObjectTable.FirstOrDefault(x => (ulong)x.Address == instigatorAddr) is IPlayerCharacter instigator && instigator.GameObjectId != targetId)
+        try {
+            if (Config.Enabled)
             {
-                foreach (var emoteConfig in Config.EmoteConfigs.Where(c => c.Enabled && c.EmoteIds.Contains(emoteId)))
+                var localPlayer = ClientState.LocalPlayer;
+                if (localPlayer != null && targetId == localPlayer.GameObjectId && ObjectTable.FirstOrDefault(x => (ulong)x.Address == instigatorAddr) is IPlayerCharacter instigator && instigator.GameObjectId != targetId)
                 {
-                    if (emoteConfig.InstigatorPattern.IsNullOrWhitespace())
+                    foreach (var emoteConfig in Config.EmoteConfigs.Where(c => c.Enabled && c.EmoteIds.Contains(emoteId)))
                     {
-                        ChatServer.SendMessage(emoteConfig.Command);
-                    }
-                    else
-                    {
-                        var instigatorFullName = $"{instigator.Name}@{instigator.HomeWorld.Value.Name}";
-                        if (Regex.IsMatch(instigatorFullName, emoteConfig.InstigatorPattern))
+                        if (emoteConfig.InstigatorPattern.IsNullOrWhitespace())
                         {
-                            var replacedCommand = Regex.Replace(instigatorFullName, emoteConfig.InstigatorPattern, emoteConfig.Command);
-                            ChatServer.SendMessage(replacedCommand);
+                            ChatServer.SendMessage(emoteConfig.Command);
+                        }
+                        else
+                        {
+                            var instigatorFullName = $"{instigator.Name}@{instigator.HomeWorld.Value.Name}";
+                            if (Regex.IsMatch(instigatorFullName, emoteConfig.InstigatorPattern))
+                            {
+                                var replacedCommand = Regex.Replace(instigatorFullName, emoteConfig.InstigatorPattern, emoteConfig.Command);
+                                ChatServer.SendMessage(replacedCommand);
+                            }
                         }
                     }
                 }
             }
         }
-
+        catch (Exception e)
+        {
+            PluginLog.Error($"Error processing emote detour: {e}");
+        }
+        
         HookEmote?.Original(unk, instigatorAddr, emoteId, targetId, unk2);
     }
 }
