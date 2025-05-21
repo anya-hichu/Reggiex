@@ -56,11 +56,13 @@ public unsafe class ChatHook : IDisposable
                 return ProcessChatInputHook.Original(uiModule, message, a3);
             }
 
+            var match = false;
             var newDecodedMessage = decodedMessage;
             foreach (var chatConfig in Config.ChatConfigs.Where(c => c.Enabled && !c.Pattern.IsNullOrWhitespace() && !c.Replacement.IsNullOrWhitespace()))
             {
                 if (Regex.IsMatch(newDecodedMessage, chatConfig.Pattern))
                 {
+                    match = true;
                     var remplacedMessage = Regex.Replace(newDecodedMessage, chatConfig.Pattern, chatConfig.Replacement);
                     if (chatConfig.Inline)
                     {
@@ -74,6 +76,11 @@ public unsafe class ChatHook : IDisposable
                         }
                     }
                 }
+            }
+
+            if(!match)
+            {
+                return ProcessChatInputHook.Original(uiModule, message, a3);
             }
 
             if (TrySendDecodedMessage(uiModule, newDecodedMessage, a3, out var returnValue))
