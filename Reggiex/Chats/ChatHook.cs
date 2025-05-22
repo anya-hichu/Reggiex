@@ -11,7 +11,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Reggiex.Chat;
+namespace Reggiex.Chats;
 
 // Source: https://github.com/Project-GagSpeak/client/blob/main/ProjectGagSpeak/UpdateMonitoring/Chat/ChatInputProcessor.cs
 
@@ -40,76 +40,76 @@ public unsafe class ChatHook : IDisposable
         ProcessChatInputHook?.Dispose();
     }
 
-    private unsafe byte ProcessChatInputDetour(IntPtr uiModule, byte** message, IntPtr a3)
+    private unsafe byte ProcessChatInputDetour(IntPtr uiModule, byte** rawMessage, IntPtr a3)
     {
         try
         {
             if (!Config.Enabled)
             {
-                return ProcessChatInputHook.Original(uiModule, message, a3);
+                return ProcessChatInputHook.Original(uiModule, rawMessage, a3);
             }
 
-            var originalSeString = MemoryHelper.ReadSeStringNullTerminated((nint)(*message));
-            var decodedMessage = originalSeString.ToString();
-            if (decodedMessage.IsNullOrWhitespace())
+            var seMessage = MemoryHelper.ReadSeStringNullTerminated((nint)(*rawMessage));
+            var message = seMessage.ToString();
+            if (message.IsNullOrWhitespace())
             {
-                return ProcessChatInputHook.Original(uiModule, message, a3);
+                return ProcessChatInputHook.Original(uiModule, rawMessage, a3);
             }
 
-            var match = false;
-            var newDecodedMessage = decodedMessage;
+            var modified = false;
+            var currentMessage = message;
             foreach (var chatConfig in Config.ChatConfigs.Where(c => c.Enabled && !c.Pattern.IsNullOrWhitespace() && !c.Replacement.IsNullOrWhitespace()))
             {
-                if (Regex.IsMatch(newDecodedMessage, chatConfig.Pattern))
+                if (Regex.IsMatch(currentMessage, chatConfig.Pattern))
                 {
-                    match = true;
-                    var remplacedMessage = Regex.Replace(newDecodedMessage, chatConfig.Pattern, chatConfig.Replacement);
+                    var replacedMessage = Regex.Replace(currentMessage, chatConfig.Pattern, chatConfig.Replacement);
                     if (chatConfig.Inline)
                     {
-                        newDecodedMessage = remplacedMessage;
+                        currentMessage = replacedMessage;
+                        modified = true;
                     }
                     else
                     {
-                        if(!TrySendDecodedMessage(uiModule, remplacedMessage, a3, out var _))
+                        if(!TrySendMessage(uiModule, replacedMessage, a3, out var _))
                         {
-                            PluginLog.Debug($"Failed to send message: {remplacedMessage}");
+                            PluginLog.Debug($"Failed to send message: {replacedMessage}");
                         }
                     }
                 }
             }
 
-            if(!match)
+            if(!modified)
             {
-                return ProcessChatInputHook.Original(uiModule, message, a3);
+                return ProcessChatInputHook.Original(uiModule, rawMessage, a3);
             }
 
-            if (TrySendDecodedMessage(uiModule, newDecodedMessage, a3, out var returnValue))
+            if (TrySendMessage(uiModule, currentMessage, a3, out var returnValue))
             {
                 return returnValue;
             }
             else
             {
                 PluginLog.Error("Message was longer than max message length");
-                return ProcessChatInputHook.Original(uiModule, message, a3);
+                return ProcessChatInputHook.Original(uiModule, rawMessage, a3);
             }
         }
         catch (Exception e)
         {
             PluginLog.Error($"Error sending message to chat box: {e}");
         }
-        return ProcessChatInputHook.Original(uiModule, message, a3);
+        return ProcessChatInputHook.Original(uiModule, rawMessage, a3);
     }
 
-    private bool TrySendDecodedMessage(IntPtr uiModule, string decodedMessage, IntPtr a3, out byte returnValue)
+    private bool TrySendMessage(IntPtr uiModule, string message, IntPtr a3, out byte returnValue)
     {
         var builder = new SeStringBuilder();
-        builder.Add(new TextPayload(decodedMessage));
-        var newSeString = builder.BuiltString;
+        builder.Add(new TextPayload(message));
+        var seString = builder.BuiltString;
 
-        if (newSeString.TextValue.Length <= 500)
+        if (seString.TextValue.Length <= 500)
         {
             var utf8String = Utf8String.FromString(".");
-            utf8String->SetString(newSeString.Encode());
+            utf8String->SetString(seString.Encode());
             returnValue = ProcessChatInputHook.Original(uiModule, (byte**)((nint)utf8String).ToPointer(), a3);
             return true;
         }

@@ -1,15 +1,13 @@
-using Dalamud.Interface.Components;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using Dalamud.Utility;
 using ImGuiNET;
-using Lumina.Excel.Sheets;
 using Lumina.Excel;
-using Reggiex.UI;
+using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dalamud.Interface.Colors;
-using Dalamud.Utility;
 using System.Text.RegularExpressions;
 
 namespace Reggiex.Configs;
@@ -80,8 +78,7 @@ public class ConfigWindow : Window
                             ImGui.TableHeadersRow();
 
                             var chatConfigs = Config.ChatConfigs.OrderBy(c => c.Priority).ToList();
-                            var clipper = UIListClipper.Build();
-
+                            var clipper = BuildListClipper();
                             clipper.Begin(chatConfigs.Count, 27);
                             while (clipper.Step())
                             {
@@ -205,8 +202,7 @@ public class ConfigWindow : Window
                             ImGui.TableSetupScrollFreeze(0, 1);
                             ImGui.TableHeadersRow();
 
-                            var clipper = UIListClipper.Build();
-
+                            var clipper = BuildListClipper();
                             clipper.Begin(Config.EmoteConfigs.Count, 27);
                             while (clipper.Step())
                             {
@@ -320,5 +316,10 @@ public class ConfigWindow : Window
             errorMessage = e.Message;
             return false;
         }
+    }
+
+    public static unsafe ImGuiListClipperPtr BuildListClipper()
+    {
+        return new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
     }
 }

@@ -1,6 +1,6 @@
 using System;
 
-namespace Reggiex.Chat;
+namespace Reggiex.Chats;
 
 [Serializable]
 public class ChatConfig

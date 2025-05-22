@@ -4,7 +4,7 @@ using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using Reggiex.Configs;
-using Reggiex.Chat;
+using Reggiex.Chats;
 using Lumina.Excel.Sheets;
 using Reggiex.Emotes;
 using Dalamud.Game;

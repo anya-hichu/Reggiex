@@ -1,5 +1,5 @@
 using Dalamud.Configuration;
-using Reggiex.Chat;
+using Reggiex.Chats;
 using Reggiex.Emotes;
 using System;
 using System.Collections.Generic;
