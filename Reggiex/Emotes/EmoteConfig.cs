@@ -7,6 +7,7 @@ namespace Reggiex.Emotes;
 public class EmoteConfig
 {
     public bool Enabled { get; set; } = false;
+    public int Priority { get; set; } = 0;
     public string InstigatorPattern { get; set; } = string.Empty;
 
     public HashSet<ushort> EmoteIds { get; set; } = [];

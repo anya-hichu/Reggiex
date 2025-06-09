@@ -5,6 +5,7 @@ using Dalamud.Utility;
 using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
+using Reggiex.Chats;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +22,7 @@ public class ConfigWindow : Window
     {
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new(400, 250),
+            MinimumSize = new(520, 250),
             MaximumSize = new(float.MaxValue, float.MaxValue)
         };
 
@@ -203,12 +204,14 @@ public class ConfigWindow : Window
                             ImGui.TableHeadersRow();
 
                             var clipper = BuildListClipper();
-                            clipper.Begin(Config.EmoteConfigs.Count, 27);
+                            var emoteConfigs = Config.EmoteConfigs.OrderBy(c => c.Priority).ToList();
+
+                            clipper.Begin(emoteConfigs.Count, 27);
                             while (clipper.Step())
                             {
                                 for (var i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
                                 {
-                                    var emoteConfig = Config.EmoteConfigs.ElementAt(i);
+                                    var emoteConfig = emoteConfigs.ElementAt(i);
                                     var hash = emoteConfig.GetHashCode();
 
                                     if (ImGui.TableNextColumn())
@@ -222,6 +225,19 @@ public class ConfigWindow : Window
                                         if (ImGui.IsItemHovered())
                                         {
                                             ImGui.SetTooltip("Enable");
+                                        }
+
+                                        ImGui.SameLine();
+                                        var priority = emoteConfig.Priority;
+                                        ImGui.SetNextItemWidth(50);
+                                        if (ImGui.InputInt($"###emoteConfig{hash}Priority", ref priority, 0))
+                                        {
+                                            emoteConfig.Priority = priority;
+                                            Config.Save();
+                                        }
+                                        if (ImGui.IsItemHovered())
+                                        {
+                                            ImGui.SetTooltip("Priority");
                                         }
                                     }
 
@@ -272,7 +288,7 @@ public class ConfigWindow : Window
                                         }
                                         if (ImGui.IsItemHovered())
                                         {
-                                            ImGui.SetTooltip("Supports capture group replacement with $<index>");
+                                            ImGui.SetTooltip("Supports capture group replacement from instigator pattern (example: $1 for first group value)");
                                         }
                                     }
 
