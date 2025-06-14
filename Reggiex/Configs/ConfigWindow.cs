@@ -5,7 +5,6 @@ using Dalamud.Utility;
 using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
-using Reggiex.Chats;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -198,7 +197,7 @@ public class ConfigWindow : Window
                             ImGui.TableSetupColumn("Instigator", ImGuiTableColumnFlags.None, 4);
                             ImGui.TableSetupColumn("Emotes", ImGuiTableColumnFlags.None, 4);
                             ImGui.TableSetupColumn("Command", ImGuiTableColumnFlags.None, 4);
-                            ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.None, 0.5f);
+                            ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.None, 3);
 
                             ImGui.TableSetupScrollFreeze(0, 1);
                             ImGui.TableHeadersRow();
@@ -247,7 +246,7 @@ public class ConfigWindow : Window
                                         ImGui.SetNextItemWidth(-1);
                                         using (ImRaii.PushColor(ImGuiCol.Text, TryValidatePattern(instigatorPattern, out var errorMessage) ? ImGuiColors.DalamudWhite : ImGuiColors.DalamudRed))
                                         {
-                                            if (ImGui.InputText($"###emoteConfig{hash}instigatorPattern", ref instigatorPattern, ushort.MaxValue))
+                                            if (ImGui.InputText($"###emoteConfig{hash}InstigatorPattern", ref instigatorPattern, ushort.MaxValue))
                                             {
                                                 emoteConfig.InstigatorPattern = instigatorPattern;
                                                 Config.Save();
@@ -294,7 +293,31 @@ public class ConfigWindow : Window
 
                                     if (ImGui.TableNextColumn())
                                     {
-                                        if (ImGui.Button($"X###emoteConfig{hash}remove") && ImGui.IsKeyDown(ImGuiKey.ModCtrl))
+                                        var checKTargetSelf = emoteConfig.CheckTargetSelf;
+                                        if (ImGui.Checkbox($"###chatConfig{hash}CheckTargetSelf", ref checKTargetSelf))
+                                        {
+                                            emoteConfig.CheckTargetSelf = checKTargetSelf;
+                                            Config.Save();
+                                        }
+                                        if (ImGui.IsItemHovered())
+                                        {
+                                            ImGui.SetTooltip("Check target is self");
+                                        }
+                                        ImGui.SameLine();
+
+                                        var checkInstigatorNotTarget = emoteConfig.CheckInstigatorNotTarget;
+                                        if (ImGui.Checkbox($"###chatConfig{hash}CheckInstigatorNotTarget", ref checkInstigatorNotTarget))
+                                        {
+                                            emoteConfig.CheckInstigatorNotTarget = checkInstigatorNotTarget;
+                                            Config.Save();
+                                        }
+                                        if (ImGui.IsItemHovered())
+                                        {
+                                            ImGui.SetTooltip("Check instigator is not the same as target");
+                                        }
+                                        ImGui.SameLine();
+
+                                        if (ImGui.Button($"X###emoteConfig{hash}Remove") && ImGui.IsKeyDown(ImGuiKey.ModCtrl))
                                         {
                                             Config.EmoteConfigs.Remove(emoteConfig);
                                             Config.Save();

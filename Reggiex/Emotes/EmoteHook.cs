@@ -12,6 +12,8 @@ namespace Reggiex.Emotes;
 
 public class EmoteHook
 {
+    private static readonly string SIGNATURE = "E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24";
+
     private ChatServer ChatServer { get; init; }
     private IClientState ClientState { get; init; }
     private Config Config { get; init; }
@@ -36,7 +38,7 @@ public class EmoteHook
 
         try
         {
-            HookEmote = GameInteropProvider.HookFromSignature<OnEmoteFuncDelegate>("E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24", OnEmoteDetour);
+            HookEmote = GameInteropProvider.HookFromSignature<OnEmoteFuncDelegate>(SIGNATURE, OnEmoteDetour);
             HookEmote.Enable();
         }
         catch (Exception e)
@@ -56,21 +58,27 @@ public class EmoteHook
             if (Config.Enabled)
             {
                 var localPlayer = ClientState.LocalPlayer;
-                if (localPlayer != null && targetId == localPlayer.GameObjectId && ObjectTable.FirstOrDefault(x => (ulong)x.Address == instigatorAddr) is IPlayerCharacter instigator && instigator.GameObjectId != targetId)
+                if (localPlayer != null && ObjectTable.FirstOrDefault(x => (ulong)x.Address == instigatorAddr) is IPlayerCharacter instigator)
                 {
                     foreach (var emoteConfig in Config.EmoteConfigs.Where(c => c.Enabled && c.EmoteIds.Contains(emoteId)))
                     {
-                        if (emoteConfig.InstigatorPattern.IsNullOrWhitespace())
+                        var validTarget = !emoteConfig.CheckTargetSelf || targetId == localPlayer.GameObjectId;
+                        var validInstigator = !emoteConfig.CheckInstigatorNotTarget || instigator.GameObjectId != targetId;
+
+                        if (validTarget && validInstigator)
                         {
-                            ChatServer.SendMessage(emoteConfig.Command);
-                        }
-                        else
-                        {
-                            var instigatorFullName = $"{instigator.Name}@{instigator.HomeWorld.Value.Name}";
-                            if (Regex.IsMatch(instigatorFullName, emoteConfig.InstigatorPattern))
+                            if (emoteConfig.InstigatorPattern.IsNullOrWhitespace())
                             {
-                                var replacedCommand = Regex.Replace(instigatorFullName, emoteConfig.InstigatorPattern, emoteConfig.Command);
-                                ChatServer.SendMessage(replacedCommand);
+                                ChatServer.SendMessage(emoteConfig.Command);
+                            }
+                            else
+                            {
+                                var instigatorFullName = $"{instigator.Name}@{instigator.HomeWorld.Value.Name}";
+                                if (Regex.IsMatch(instigatorFullName, emoteConfig.InstigatorPattern))
+                                {
+                                    var replacedCommand = Regex.Replace(instigatorFullName, emoteConfig.InstigatorPattern, emoteConfig.Command);
+                                    ChatServer.SendMessage(replacedCommand);
+                                }
                             }
                         }
                     }
