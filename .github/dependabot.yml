@@ -9,10 +9,6 @@ updates:
     directory: "/" # adjust if needed
     schedule:
       interval: "weekly"
-    groups:
-      sdk-updates:
-        patterns:
-          - "Dalamud.NET.Sdk"
 
   - package-ecosystem: "github-actions"
     directory: "/"
