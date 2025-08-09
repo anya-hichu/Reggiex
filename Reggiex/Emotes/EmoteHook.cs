@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace Reggiex.Emotes;
 
+// Reference: https://github.com/MgAl2O4/PatMeDalamud/blob/528c99859d04f3389adeeb89964dbef15a03317f/plugin/EmoteReaderHooks.cs
 public class EmoteHook
 {
     private static readonly string SIGNATURE = "E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24";

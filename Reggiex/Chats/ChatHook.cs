@@ -1,11 +1,11 @@
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Hooking;
-using Dalamud.Memory;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
-using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.System.String;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Component.Shell;
 using Reggiex.Configs;
 using System;
 using System.Linq;
@@ -13,47 +13,46 @@ using System.Text.RegularExpressions;
 
 namespace Reggiex.Chats;
 
-// Source: https://github.com/Project-GagSpeak/client/blob/main/ProjectGagSpeak/UpdateMonitoring/Chat/ChatInputProcessor.cs
+// Reference: https://github.com/Project-GagSpeak/client/blob/1.2.1.6/ProjectGagSpeak/UpdateMonitoring/Chat/ChatInputProcessor.cs
 
 public unsafe class ChatHook : IDisposable
 {
     private Config Config { get; init; }
     private IPluginLog PluginLog { get; init; }
 
-    private unsafe delegate byte ProcessChatInputDelegate(IntPtr uiModule, byte** message, IntPtr a3);
-    [Signature("E8 ?? ?? ?? ?? FE 86 ?? ?? ?? ?? C7 86 ?? ?? ?? ?? ?? ?? ?? ??", DetourName = nameof(ProcessChatInputDetour), Fallibility = Fallibility.Auto)]
-    private Hook<ProcessChatInputDelegate> ProcessChatInputHook { get; set; } = null!;
+    private Hook<ShellCommandModule.Delegates.ExecuteCommandInner>? ExecuteCommandInnerHook { get; init; }
 
     public ChatHook(Config config, IGameInteropProvider gameInteropProvider, IPluginLog pluginLog)
     {
         Config = config;
         PluginLog = pluginLog;
-
-
-        gameInteropProvider.InitializeFromAttributes(this);
-        ProcessChatInputHook.Enable();
+        ExecuteCommandInnerHook = gameInteropProvider.HookFromAddress<ShellCommandModule.Delegates.ExecuteCommandInner>(
+            ShellCommandModule.MemberFunctionPointers.ExecuteCommandInner,
+            DetourExecuteCommand
+        );
+        ExecuteCommandInnerHook.Enable();
     }
 
     public void Dispose()
     {
-        ProcessChatInputHook?.Disable();
-        ProcessChatInputHook?.Dispose();
+        ExecuteCommandInnerHook?.Dispose();
     }
 
-    private unsafe byte ProcessChatInputDetour(IntPtr uiModule, byte** rawMessage, IntPtr a3)
+    private unsafe void DetourExecuteCommand(ShellCommandModule* commandModule, Utf8String* rawMessage, UIModule* uiModule)
     {
         try
         {
             if (!Config.Enabled)
             {
-                return ProcessChatInputHook.Original(uiModule, rawMessage, a3);
+                ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+                return;
             }
 
-            var seMessage = MemoryHelper.ReadSeStringNullTerminated((nint)(*rawMessage));
-            var message = seMessage.ToString();
+            var message = (*rawMessage).ToString();
             if (message.IsNullOrWhitespace())
             {
-                return ProcessChatInputHook.Original(uiModule, rawMessage, a3);
+                ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+                return;
             }
 
             var modified = false;
@@ -70,7 +69,7 @@ public unsafe class ChatHook : IDisposable
                     }
                     else
                     {
-                        if(!TrySendMessage(uiModule, replacedMessage, a3, out var _))
+                        if(!TrySendMessage(commandModule, uiModule, replacedMessage))
                         {
                             PluginLog.Debug($"Failed to send message: {replacedMessage}");
                         }
@@ -80,27 +79,25 @@ public unsafe class ChatHook : IDisposable
 
             if(!modified)
             {
-                return ProcessChatInputHook.Original(uiModule, rawMessage, a3);
+                ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
+                return;
             }
 
-            if (TrySendMessage(uiModule, currentMessage, a3, out var returnValue))
-            {
-                return returnValue;
-            }
-            else
+            if (!TrySendMessage(commandModule, uiModule, currentMessage))
             {
                 PluginLog.Error("Message was longer than max message length");
-                return ProcessChatInputHook.Original(uiModule, rawMessage, a3);
+                ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
             }
+            return;
         }
         catch (Exception e)
         {
             PluginLog.Error($"Error sending message to chat box: {e}");
         }
-        return ProcessChatInputHook.Original(uiModule, rawMessage, a3);
+        ExecuteCommandInnerHook!.Original(commandModule, rawMessage, uiModule);
     }
 
-    private bool TrySendMessage(IntPtr uiModule, string message, IntPtr a3, out byte returnValue)
+    private bool TrySendMessage(ShellCommandModule* commandModule, UIModule* uiModule, string message)
     {
         var builder = new SeStringBuilder();
         builder.Add(new TextPayload(message));
@@ -110,10 +107,9 @@ public unsafe class ChatHook : IDisposable
         {
             var utf8String = Utf8String.FromString(".");
             utf8String->SetString(seString.Encode());
-            returnValue = ProcessChatInputHook.Original(uiModule, (byte**)((nint)utf8String).ToPointer(), a3);
+            ExecuteCommandInnerHook!.Original(commandModule, utf8String, uiModule);
             return true;
         }
-        returnValue = default;
         return false;
     }
 }

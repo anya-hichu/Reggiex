@@ -1,8 +1,8 @@
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
-using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System;
@@ -19,7 +19,7 @@ public class ConfigWindow : Window
 
     public ConfigWindow(Config config, ExcelSheet<Emote> emoteSheet) : base("Reggiex Config##configWindow")
     {
-        SizeConstraints = new WindowSizeConstraints
+        SizeConstraints = new()
         {
             MinimumSize = new(520, 250),
             MaximumSize = new(float.MaxValue, float.MaxValue)
@@ -78,7 +78,7 @@ public class ConfigWindow : Window
                             ImGui.TableHeadersRow();
 
                             var chatConfigs = Config.ChatConfigs.OrderBy(c => c.Priority).ToList();
-                            var clipper = BuildListClipper();
+                            var clipper = ImGui.ImGuiListClipper();
                             clipper.Begin(chatConfigs.Count, 27);
                             while (clipper.Step())
                             {
@@ -202,7 +202,7 @@ public class ConfigWindow : Window
                             ImGui.TableSetupScrollFreeze(0, 1);
                             ImGui.TableHeadersRow();
 
-                            var clipper = BuildListClipper();
+                            var clipper = ImGui.ImGuiListClipper();
                             var emoteConfigs = Config.EmoteConfigs.OrderBy(c => c.Priority).ToList();
 
                             clipper.Begin(emoteConfigs.Count, 27);
@@ -355,10 +355,5 @@ public class ConfigWindow : Window
             errorMessage = e.Message;
             return false;
         }
-    }
-
-    public static unsafe ImGuiListClipperPtr BuildListClipper()
-    {
-        return new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
     }
 }
