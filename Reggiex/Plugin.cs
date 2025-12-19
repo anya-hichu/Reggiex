@@ -20,7 +20,6 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
-    [PluginService] internal static IClientState ClientState { get; private set; } = null!;
     [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
 
 
@@ -39,7 +38,6 @@ public sealed class Plugin : IDalamudPlugin
     public Plugin()
     {
         Config = PluginInterface.GetPluginConfig() as Config ?? new Config();
-        Config.MaybeMigrate();
         ConfigWindow = new ConfigWindow(Config, DataManager.GetExcelSheet<Emote>()!);
         
         WindowSystem.AddWindow(ConfigWindow);
@@ -53,7 +51,7 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.OpenMainUi += ToggleConfigUI;
 
         ChatHook = new(Config, GameInteropProvider, PluginLog);
-        EmoteHook = new(new(SigScanner), ClientState, Config, GameInteropProvider, ObjectTable, PluginLog);
+        EmoteHook = new(new(SigScanner), Config, GameInteropProvider, ObjectTable, PluginLog);
     }
 
     public void Dispose()

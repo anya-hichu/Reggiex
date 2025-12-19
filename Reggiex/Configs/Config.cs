@@ -22,25 +22,4 @@ public class Config : IPluginConfiguration
     {
         Plugin.PluginInterface.SavePluginConfig(this);
     }
-
-    #region deprecated
-    [Obsolete("Moved to ChatConfigs in version 1")]
-    public List<ChatConfig> Conditions { get; set; } = [];
-
-    public void MaybeMigrate()
-    {
-        if (Version < LATEST)
-        {
-            if (Version < 1)
-            {
-                ChatConfigs.AddRange(Conditions);
-                Conditions.Clear();
-            }
-
-            Version = LATEST;
-            Save();
-        }
-    }
-
-    #endregion
 }

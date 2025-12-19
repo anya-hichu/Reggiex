@@ -16,7 +16,6 @@ public class EmoteHook
     private static readonly string SIGNATURE = "E8 ?? ?? ?? ?? 48 8D 8B ?? ?? ?? ?? 4C 89 74 24";
 
     private ChatServer ChatServer { get; init; }
-    private IClientState ClientState { get; init; }
     private Config Config { get; init; }
     private IGameInteropProvider GameInteropProvider { get; init; }
     private IPluginLog PluginLog { get; init; }
@@ -28,10 +27,9 @@ public class EmoteHook
 
     private Hook<OnEmoteFuncDelegate>? HookEmote { get; init; }
 
-    public EmoteHook(ChatServer chatServer, IClientState clientState, Config config, IGameInteropProvider gameInteropProvider, IObjectTable objectTable, IPluginLog pluginLog)
+    public EmoteHook(ChatServer chatServer, Config config, IGameInteropProvider gameInteropProvider, IObjectTable objectTable, IPluginLog pluginLog)
     {
         ChatServer = chatServer;
-        ClientState = clientState;
         Config = config;
         GameInteropProvider = gameInteropProvider;
         ObjectTable = objectTable;
@@ -58,7 +56,7 @@ public class EmoteHook
         try {
             if (Config.Enabled)
             {
-                var localPlayer = ClientState.LocalPlayer;
+                var localPlayer = ObjectTable.LocalPlayer;
                 if (localPlayer != null && ObjectTable.FirstOrDefault(x => (ulong)x.Address == instigatorAddr) is IPlayerCharacter instigator)
                 {
                     foreach (var emoteConfig in Config.EmoteConfigs.Where(c => c.Enabled && c.EmoteIds.Contains(emoteId)))
